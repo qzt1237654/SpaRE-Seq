@@ -1,0 +1,9 @@
+*.h5ad
+*.h5
+*.fa
+*.gtf
+*.csv
+*.tsv
+
+__pycache__/
+.ipynb_checkpoints/
