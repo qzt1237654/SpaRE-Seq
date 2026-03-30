@@ -1,0 +1,9 @@
+README.md
+setup.py
+spare_seq/__init__.py
+spare_seq/annotation.py
+spare_seq.egg-info/PKG-INFO
+spare_seq.egg-info/SOURCES.txt
+spare_seq.egg-info/dependency_links.txt
+spare_seq.egg-info/requires.txt
+spare_seq.egg-info/top_level.txt

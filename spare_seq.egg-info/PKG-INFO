@@ -1,0 +1,18 @@
+Metadata-Version: 2.4
+Name: spare_seq
+Version: 0.1.0
+Summary: A comprehensive bioinformatics pipeline for Spatial RNA Editing Analysis.
+Author: qzt1237654
+Author-email: 2861658363@qq.com
+Requires-Python: >=3.8
+Requires-Dist: pandas
+Requires-Dist: numpy
+Requires-Dist: scipy
+Requires-Dist: tqdm
+Requires-Dist: gffutils
+Requires-Dist: matplotlib
+Dynamic: author
+Dynamic: author-email
+Dynamic: requires-dist
+Dynamic: requires-python
+Dynamic: summary
