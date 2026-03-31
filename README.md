@@ -24,6 +24,23 @@ The pipeline is structured into three main analytical workflows:
     * Maps significant sites to genomic regions (CDS, UTRs, Exons, Introns) using `GTF` databases.
     * Generates publication-ready stacked bar plots and volcano plots.
 
+
+ ![Requirements](https://img.shields.io/badge/Requirements-Click%20to%20View-blue?style=for-the-badge&logo=generic-shared)
+# SpaRE-Seq Core Environment Dependencies
+torch==1.13.1
+numpy==1.23.5
+scanpy==1.9.3
+anndata==0.8.0
+pandas==1.5.3
+scipy==1.10.0
+scikit-learn==1.2.2
+tqdm==4.64.1
+matplotlib==3.7.0
+seaborn==0.12.2
+jupyter==1.0.0
+gffutils==0.13
+rpy2==3.4.1
+
 ## 🚀 Installation (Coming Soon)
 
 *Note: SpaRE-Seq is currently undergoing refactoring into a standard Python package. Once completed, it will be installable via pip:*
