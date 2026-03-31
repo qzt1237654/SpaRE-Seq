@@ -25,8 +25,7 @@ The pipeline is structured into three main analytical workflows:
     * Generates publication-ready stacked bar plots and volcano plots.
 
 
- ![Requirements](https://img.shields.io/badge/Requirements-Click%20to%20View-blue?style=for-the-badge&logo=generic-shared)
-# SpaRE-Seq Core Environment Dependencies
+## SpaRE-Seq Core Environment Dependencies
 torch==1.13.1
 numpy==1.23.5
 scanpy==1.9.3
