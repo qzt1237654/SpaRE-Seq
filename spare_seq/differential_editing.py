@@ -7,10 +7,13 @@ def run_deseq2_stress_vs_control(split_dir, output_dir, n_clusters=6):
     from rpy2.robjects import r
     os.makedirs(output_dir, exist_ok=True)
     
+    r_input_path = split_dir.replace('\\', '/')
+    r_output_path = output_dir.replace('\\', '/')
+    
     r_code = f"""
     library(DESeq2)
-    input_path <- "{split_dir.replace('\\', '/')}"
-    output_dir <- "{output_dir.replace('\\', '/')}"
+    input_path <- "{r_input_path}"
+    output_dir <- "{r_output_path}"
     
     for (cluster_id in 0:{n_clusters-1}) {{
         c_dir <- file.path(input_path, paste0("cluster", cluster_id))
@@ -76,10 +79,14 @@ def run_deseq2_onlyC_cluster_vs_others(input_dir, output_dir, n_clusters=6):
     from rpy2.robjects import r
     os.makedirs(output_dir, exist_ok=True)
     
+    # --- 核心修复：提前处理路径变量 ---
+    r_input_path = input_dir.replace('\\', '/')
+    r_output_path = output_dir.replace('\\', '/')
+    
     r_code = f"""
     library(DESeq2)
-    input_path <- "{input_dir.replace('\\', '/')}"
-    output_dir <- "{output_dir.replace('\\', '/')}"
+    input_path <- "{r_input_path}"
+    output_dir <- "{r_output_path}"
     
     for (cluster_id in 0:{n_clusters-1}) {{
         file_cluster <- file.path(input_path, paste0("cluster", cluster_id), paste0("cluster", cluster_id, "_filtered.csv"))

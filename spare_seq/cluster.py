@@ -13,7 +13,7 @@ import seaborn as sns
 import matplotlib.colors as mcolors
 
 def init_spclue_env(r_home, r_user, spclue_path, seed=0):
-    """初始化 R 环境、spCLUE 路径并固定所有随机种子"""
+    """Initialize the R environment, the spCLUE path and fix all random seeds"""
     os.environ['R_HOME'] = r_home
     os.environ['R_USER'] = r_user
     sys.path.append(spclue_path)
@@ -25,9 +25,9 @@ def init_spclue_env(r_home, r_user, spclue_path, seed=0):
     
     try:
         importr('mclust')
-        print("✅ R 环境与 mclust 加载成功")
+        print("R environment and mclust loaded successfully ")
     except Exception as e:
-        print(f"❌ mclust 加载失败，请检查 R 环境: {e}")
+        print(f"mclust failed to load. Please check the R environment: {e}")
 
     # 固定种子
     random.seed(seed)
@@ -47,17 +47,17 @@ def init_spclue_env(r_home, r_user, spclue_path, seed=0):
 
 
 def run_spclue_clustering(sample_names, h5ad_template_path, spclue_mod, n_clusters=6, device_name='cuda'):
-    """执行完整的预处理与 spCLUE 聚类流程"""
+    """Carry out the complete preprocessing and spCLUE clustering process"""
     adata_s = []
     batch_list = []
     
-    print("📂 开始批量读取与预处理数据...")
+    print("start batch reading and preprocessing data...")
     for i, name in enumerate(sample_names):
         path = h5ad_template_path.format(name=name)
         adata_temp = sc.read_h5ad(path)
         adata_temp.var_names_make_unique()
         
-        # spCLUE 要求密集矩阵
+        # spCLUE requires a dense matrix
         if hasattr(adata_temp.X, "toarray"):
             adata_temp.X = adata_temp.X.toarray()
             
@@ -69,29 +69,42 @@ def run_spclue_clustering(sample_names, h5ad_template_path, spclue_mod, n_cluste
 
     batch_list = np.array(batch_list)
     adata = sc.concat(adata_s, index_unique="_")
-    print(f"🔗 合并完成！总细胞数: {adata.n_obs}")
+    print(f"The merge is complete! Total cell count: {adata.n_obs}")
 
-    # PCA 降维
+    # PCA dimensional reduction
     adata.obsm["X_pca"] = PCA(n_components=200, random_state=0).fit_transform(adata.X)
 
-    # 构建 Spatial 和 Expr Graph
-    print("🕸️ 正在构建空间与表达图网络...")
-    g_spatial = block_diag([spclue_mod.prepare_graph(cur, "spatial") for cur in adata_s])
-    g_expr = block_diag([spclue_mod.prepare_graph(cur, "expr") for cur in adata_s])
+    # Construct Spatial and Expr graphs
+    print("building spatial and expression graph...")
+    # spatial graph
+    g_spatial_list = []
+    for adata_cur in adata_s:
+        g_spatial = spclue_mod.prepare_graph(adata_cur, "spatial")
+        g_spatial_list.append(g_spatial)
+    g_spatial = block_diag(g_spatial_list)
+
+    # expression graph
+    g_expr_list = []
+    for adata_cur in adata_s:
+        g_expr = spclue_mod.prepare_graph(adata_cur, "expr")
+        g_expr_list.append(g_expr)
+    g_expr = block_diag(g_expr_list)
+
     graph_dict = {"spatial": g_spatial, "expr": g_expr}
 
     device = torch.device(device_name if torch.cuda.is_available() else "cpu")
     
-    # 训练模型
-    print("🧠 开始训练 spCLUE 模型...")
+    # train model
+    print("training spCLUE model...")
     spCLUE_model = spclue_mod.spCLUE(
         adata.obsm["X_pca"], graph_dict, n_clusters, batch_list,
         epochs=500, batch_train=True, device=device
     )
+
     _, adata.obsm["spCLUE"] = spCLUE_model.trainBatch()
-    
-    # 格式转换与聚类
+    adata.obs["batch_name"] = batch_list
     adata.obs["batch_name"] = adata.obs["batch_name"].astype("category")
+
     adata.obsm["spCLUE"] = np.ascontiguousarray(adata.obsm["spCLUE"]).astype(np.float64)
     
     sc.pp.neighbors(adata, n_neighbors=50, use_rep="spCLUE")
@@ -99,18 +112,18 @@ def run_spclue_clustering(sample_names, h5ad_template_path, spclue_mod, n_cluste
     
     try:
         spclue_mod.batch_refine_label(adata, key="leiden", batch_key="batch_name")
-        print("✅ Label Refine 成功！生成了 leiden_refined 列")
+        print(f"Label Refine succeeded!produce {leiden_refined} column.")
     except Exception as e:
-        print(f"❌ Refine 失败: {e}")
-        adata.obs["leiden_refined"] = adata.obs["leiden"] # 降级处理
+        print(f"Refine failed: {e}")
+        adata.obs["leiden_refined"] = adata.obs["leiden"] 
         
     return adata
 
 
 def plot_spatial_clusters(adata, sample_names, save_path, flip_dict=None):
     """
-    绘制空间分布图。
-    flip_dict 示例: {"50": "lr", "49": "ud"} (lr=左右翻转, ud=上下翻转)
+    Draw spatial distribution map
+    flip_dict example: {"50": "lr", "49": "ud"} (lr=left_right flip, ud=up_down_flip)
     """
     if flip_dict is None: flip_dict = {}
     
@@ -131,7 +144,7 @@ def plot_spatial_clusters(adata, sample_names, save_path, flip_dict=None):
             coords = cur.obsm["spatial"].copy()
             flip_info = ""
             
-            # 自动应用翻转逻辑
+            # Automatically apply the flip logic
             action = flip_dict.get(str(s_id), "")
             if action == "lr":
                 coords[:, 0] = -coords[:, 0]
@@ -154,11 +167,11 @@ def plot_spatial_clusters(adata, sample_names, save_path, flip_dict=None):
     plt.tight_layout()
     plt.savefig(save_path, dpi=300, bbox_inches='tight')
     plt.close()
-    print(f"✅ 空间聚类图已保存: {save_path}")
+    print(f"The spatial clustering graph has been saved in: {save_path}")
 
 
 def plot_umap_qc(adata, save_path):
-    """绘制 UMAP 质量控制图 (批次融合与聚类效果)"""
+    """Draw the UMAP quality control chart (batch fusion and clustering effects)"""
     if "X_umap" not in adata.obsm:
         sc.pp.neighbors(adata, use_rep="spCLUE", n_neighbors=15)
         sc.tl.umap(adata)
@@ -169,26 +182,26 @@ def plot_umap_qc(adata, save_path):
     plt.tight_layout()
     plt.savefig(save_path, dpi=300)
     plt.close()
-    print(f"✅ UMAP QC 图已保存: {save_path}")
+    print(f"The UMAP QC map has been saved: {save_path}")
 
 
 def export_clean_cluster_bins(adata, sample_names, h5ad_template_path, output_dir, n_clusters=6):
-    """导出 Bin ID，自动对比原始 h5ad 检测并切除异常后缀"""
+    """Export the Bin ID, automatically compare it with the original h5ad to detect and remove abnormal suffixes"""
     os.makedirs(output_dir, exist_ok=True)
-    print("🧹 开始智能导出 Cluster Bins...")
+    print("Start intelligent export of Cluster Bins...")
     
     for i, s_id in enumerate(sample_names):
-        # 1. 偷偷看一眼原始文件，获取真正的 Bin ID 格式
+        # 1. Take a sneak peek at the original file to obtain the true Bin ID format
         raw_path = h5ad_template_path.format(name=s_id)
         if not os.path.exists(raw_path):
-            print(f"⚠️ 找不到原文件 {raw_path}，跳过后缀对比。")
+            print(f"The original file {raw_path} cannot be found. Skip the suffix comparison.")
             continue
             
         raw_adata = sc.read_h5ad(raw_path, backed='r')
         raw_bins_set = set(raw_adata.obs_names)
         raw_adata.file.close()
         
-        # 2. 提取当前样本的聚类数据
+        # 2. Extract the clustering data of the current sample
         sample_mask = adata.obs["batch_name"].astype(str) == str(i)
         sample_adata = adata[sample_mask]
         
@@ -199,23 +212,23 @@ def export_clean_cluster_bins(adata, sample_names, h5ad_template_path, output_di
             if not raw_bins_in_concat: continue
             
             clean_bins = []
-            # 3. 智能检测逻辑
-            # 如果目前的名字不在原数据集里，并且它带有 "_"
+            # 3. Intelligent detection logic
+            # If the current name is not in the original dataset and it contains "_"
             for b in raw_bins_in_concat:
                 if b not in raw_bins_set and "_" in b:
                     stripped_b = b.rsplit('_', 1)[0]
-                    # 如果切掉尾巴后在原数据里，说明找到了正确的去除方式
+                    # If the tail is still in the original data after being cut off, it indicates that the correct removal method has been found
                     if stripped_b in raw_bins_set:
                         clean_bins.append(stripped_b)
                     else:
-                        clean_bins.append(b) # 切了也不对，原样保留
+                        clean_bins.append(b) # It's not right to cut it. Keep it as it is
                 else:
-                    clean_bins.append(b) # 没毛病，直接用
+                    clean_bins.append(b) 
                     
-            # 4. 保存
+            # 4. save
             file_path = os.path.join(output_dir, f"{s_id}_cluster{n}.txt")
             with open(file_path, 'w') as f:
                 for bin_id in clean_bins:
                     f.write(f"{bin_id}\n")
                     
-        print(f"✅ 样本 {s_id} 导出完成，后缀已智能对齐。")
+        print(f"The sample {s_id} has been exported successfully, and the suffixes have been intelligently aligned.")
