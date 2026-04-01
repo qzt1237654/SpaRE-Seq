@@ -2,25 +2,22 @@
 
 __version__ = "0.1.0"
 
-# --- 1. Preprocessing (Line 1 & Line 3) ---
-from .preprocessing import (
+# --- 1. Spatial Clustering & QC ---
+from .cluster import (
     init_spclue_env,
     run_spclue_clustering,
+    plot_umap_qc,
     plot_spatial_clusters,
-    export_clean_cluster_bins,
-    prepare_stress_vs_control_matrices,
-    prepare_onlyC_cluster_vs_others_matrices
+    export_clean_cluster_bins
 )
 
-# --- 2. Differential Editing Analysis (Line 1 & Line 3) ---
-from .differential_editing import (
-    run_deseq2_stress_vs_control,        # Line 1: Stress vs Control
-    filter_stress_deseq2_results,        # Line 1: Cleaner & Filter
-    run_deseq2_onlyC_cluster_vs_others,  # Line 3: Internal Comparison
-    filter_onlyC_deseq2_results          # Line 3: Cleaner & Filter
+# --- 2. End-to-End Differential Editing Analysis ---
+from .DESeq2 import (
+    run_pipeline_stress_vs_control,
+    run_pipeline_cluster_vs_others
 )
 
-# --- 3. Gene-Ratio Correlation Analysis (Line 2) ---
+# --- 3. Gene-Ratio Correlation Analysis ---
 from .correlation import (
     extract_and_normalize_genes,
     calculate_ratio_matrix,

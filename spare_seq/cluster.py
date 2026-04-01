@@ -18,6 +18,12 @@ def init_spclue_env(r_home, r_user, spclue_path, seed=0):
     os.environ['R_USER'] = r_user
     sys.path.append(spclue_path)
     
+    # --- ADD THESE 3 LINES: Silence R console to prevent Windows UTF-8 popup errors ---
+    import rpy2.rinterface_lib.callbacks
+    rpy2.rinterface_lib.callbacks.consolewrite_print = lambda x: None
+    rpy2.rinterface_lib.callbacks.consolewrite_warnerror = lambda x: None
+    # --------------------------------------------------------------------------------
+
     import rpy2.robjects as robjects
     from rpy2.robjects import numpy2ri
     from rpy2.robjects.packages import importr
@@ -112,7 +118,7 @@ def run_spclue_clustering(sample_names, h5ad_template_path, spclue_mod, n_cluste
     
     try:
         spclue_mod.batch_refine_label(adata, key="leiden", batch_key="batch_name")
-        print(f"Label Refine succeeded!produce {leiden_refined} column.")
+        print(f"Label Refine succeeded!")
     except Exception as e:
         print(f"Refine failed: {e}")
         adata.obs["leiden_refined"] = adata.obs["leiden"] 
