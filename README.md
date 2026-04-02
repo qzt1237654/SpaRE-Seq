@@ -26,19 +26,19 @@ The pipeline is structured into three main analytical workflows:
 
 
 ## SpaRE-Seq Core Environment Dependencies
-torch==1.13.1
-numpy==1.23.5
-scanpy==1.9.3
-anndata==0.8.0
-pandas==1.5.3
-scipy==1.10.0
-scikit-learn==1.2.2
-tqdm==4.64.1
-matplotlib==3.7.0
-seaborn==0.12.2
-jupyter==1.0.0
-gffutils==0.13
-rpy2==3.4.1
+* torch==1.13.1
+* numpy==1.23.5
+* scanpy==1.9.3
+* anndata==0.8.0
+* pandas==1.5.3
+* scipy==1.10.0
+* scikit-learn==1.2.2
+* tqdm==4.64.1
+* matplotlib==3.7.0
+* seaborn==0.12.2
+* jupyter==1.0.0
+* gffutils==0.13
+* rpy2==3.4.1
 
 ## 🚀 Installation (Coming Soon)
 
